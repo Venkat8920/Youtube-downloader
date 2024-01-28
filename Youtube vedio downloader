@@ -1,0 +1,37 @@
+import streamlit as st
+from pytube import YouTube
+import os
+
+default_download_directory = "/Users/venkat/Downloads"  # Update this path
+
+def streamlit_app():
+    st.title("YouTube Video Downloader")
+
+    # User input for YouTube URL
+    url = st.text_input("Enter the YouTube video URL:")
+
+    # Informing user about the download directory
+    st.write(f"Downloaded videos will be saved in: {default_download_directory}")
+
+    if url:
+        yt = YouTube(url)
+        st.write(f"Title: {yt.title}")
+
+        # Display available streams
+        st.write("Available streams:")
+        streams = yt.streams.filter(progressive=True)
+        stream_options = {f"itag: {stream.itag}, Resolution: {stream.resolution}, Mime Type: {stream.mime_type}": stream.itag for stream in streams}
+        selected_stream_itag = st.selectbox("Choose a stream to download:", options=list(stream_options.keys()), format_func=lambda x: x)
+
+        if st.button("Download Video"):
+            try:
+                if not os.path.exists(default_download_directory):
+                    os.makedirs(default_download_directory)
+                yt.streams.get_by_itag(stream_options[selected_stream_itag]).download(output_path=default_download_directory)
+                st.success(f"Download completed! Check the file at {default_download_directory}")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    streamlit_app()
+
